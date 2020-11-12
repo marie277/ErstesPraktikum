@@ -6,6 +6,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Geocoder
 import android.location.LocationManager
 import android.os.Bundle
 import android.os.Looper
@@ -19,7 +20,6 @@ import com.google.android.gms.location.*
 import org.json.JSONObject
 import java.sql.Timestamp
 import kotlin.math.sqrt
-
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
     private var tvAccelerometer:ArrayList<TextView> = ArrayList()
@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var jsonObject = JSONObject()
     private var jsonObject2 = JSONObject()
     private val timestamp: Timestamp= Timestamp(System.currentTimeMillis())
+    //val client : OkHttpClient = OkHttpClient()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,6 +51,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         for(i in idPosition){
             tvPosition.add(findViewById(i))
         }
+
         val buttonStart: Button = findViewById(R.id.startButton)
         val buttonStop : Button = findViewById(R.id.stopButton)
         //Start des Positionstrackings
@@ -101,6 +103,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             jsonObject.put("Altitude", p0.lastLocation.altitude)
             jsonObject.put("Genauigkeit", p0.lastLocation.accuracy)
             jsonObject.put("Timestamp", timestamp)
+
+            val geocoder = Geocoder(applicationContext)
+            val geocodeResults = geocoder.getFromLocation(p0.lastLocation.latitude, p0.lastLocation.longitude, 1)
+            if (geocodeResults.size > 0){
+                jsonObject.put("Adresse", geocodeResults[0].getAddressLine(0))
+            }
+            else {
+                jsonObject.put("Adresse", "nicht verfügbar")
+            }
             Log.d("data",jsonObject.toString())
         }
     }
@@ -170,4 +181,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         jsonObject2.put("Time", timestamp)
         Log.d("data2",jsonObject2.toString())
     }
+    /*private fun fetchJson() {
+        val request =
+            Request.Builder().url("http://hsbo1.free.beeceptor.com").post(postBody.toRequestBody())
+                .build()
+        val postBody = "String der übertragen werden soll"
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                e.printStackTrace()
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (!response.isSuccessful) throw IOException("Fehler: $response")
+                Log.e("Res", response.body!!.string())
+// Implementierung, was geschehen soll, wenn POST-Anfrage erfolgreich war
+            }
+        })
+    }*/
 }
